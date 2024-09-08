@@ -13,20 +13,23 @@ import pandas as pd
 
 os.environ["OPENAI_API_KEY"] ="NA"
 
-#llm = ChatOllama(model="llama3.1",base_url="http://localhost:11434")
 llm_groq = ChatGroq(temperature=0,groq_api_key="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",model_name="llama-3.1-70b-versatile")
 
 class DataEnrichment(BaseTool):
     name: str ="DataEnrichment"
     description: str ="Data enrichment tool"
 
-    def _run(self,data:dict, url_csv:str = "data.csv", filename: str ="articles_data_sites_touristiques.csv") -> str:
+    def _run(self,data:list = [], url_csv:str = "data.csv", filename: str ="articles_data_sites_touristiques.json") -> str:
         df = pd.read_csv(url_csv)
+        for index, row in df.iterrows():
+            data.append({
+                "nom":row['Nom'],
+                "article": f"Article détaillé sur {row['Nom']}" 
+            })
+        with open(filename, "w") as f:
+            json.dump(data, f)
+
         return "JSON saved as {filename}"
-
-    def enrichment():
-        pass
-
 
 agent= Agent(
     role="Enrichment Specialist",
@@ -36,7 +39,6 @@ agent= Agent(
     llm=llm_groq,
     tools = [DataEnrichment(result_as_answer=True)]
 )
-
 
 task= Task(
     description=(
